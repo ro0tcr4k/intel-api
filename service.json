@@ -1,0 +1,87 @@
+{
+  "name": "RootCrak Intel API",
+  "product": "intel-api-v1",
+  "tos": "intelligence, not warranty",
+  "description": "Paid x402 pre-flight scans for AI agents: wallet-drainer heuristics and domain + static LLM-injection analysis. Returns risk signals, never SAFE/DANGEROUS.",
+  "base_url": "https://intel.rootcrak.com",
+  "docs": "https://github.com/ro0tcr4k/intel-api",
+  "health": "https://intel.rootcrak.com/v1/intel/health",
+  "sdk": "https://intel.rootcrak.com/v1/intel/sdk",
+  "payments": {
+    "protocol": "x402",
+    "asset": "USDC",
+    "accepted_tokens": ["USDC"],
+    "rejected_tokens": ["ROOT", "$ROOT"],
+    "networks": [
+      {
+        "rail": "evm",
+        "caip2": "eip155:8453",
+        "name": "Base mainnet"
+      },
+      {
+        "rail": "spl",
+        "caip2": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "name": "Solana mainnet",
+        "note": "Use extra.feePayer from the current 402 accepts row"
+      }
+    ]
+  },
+  "services": [
+    {
+      "id": "drainer",
+      "method": "POST",
+      "path": "/v1/intel/scans/drainer",
+      "price_usd": 0.05,
+      "price": "$0.05",
+      "amount": "50000",
+      "poll_after_seconds": 5,
+      "timeout_seconds": 90,
+      "analysis": "static_drainer_heuristics"
+    },
+    {
+      "id": "domain",
+      "method": "POST",
+      "path": "/v1/intel/scans/domain",
+      "price_usd": 0.25,
+      "price": "$0.25",
+      "amount": "250000",
+      "poll_after_seconds": 12,
+      "timeout_seconds": 480,
+      "analysis": "headers_dns_files_static_llm_injection"
+    }
+  ],
+  "job": {
+    "create_fields": ["job_id", "access_token", "status", "poll", "result", "poll_after_seconds", "timeout_seconds"],
+    "result_path": "/v1/intel/jobs/{job_id}/result",
+    "status_path": "/v1/intel/jobs/{job_id}",
+    "auth_header": "X-Job-Token"
+  },
+  "result_schema": {
+    "required": [
+      "risk_score",
+      "confidence",
+      "flags",
+      "evidence",
+      "recommended_action",
+      "disclaimer",
+      "tos"
+    ],
+    "forbidden": ["verdict", "is_safe", "binary_verdict"],
+    "recommended_action_enum": [
+      "monitor",
+      "proceed_with_caution",
+      "investigate_further",
+      "do_not_interact"
+    ],
+    "action_from_risk_score": {
+      "0-14": "monitor",
+      "15-39": "proceed_with_caution",
+      "40-69": "investigate_further",
+      "70-100": "do_not_interact"
+    }
+  },
+  "policy": {
+    "fail_closed_on": ["do_not_interact", "job_failed", "timeout", "unreachable"],
+    "never_binary_verdict": true
+  }
+}

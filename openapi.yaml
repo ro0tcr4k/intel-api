@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: RootCrak Intel API
+  version: "1"
+  description: >
+    Paid x402 pre-flight scans for AI agents. USDC on Base and Solana.
+    Intelligence, not warranty. Never SAFE/DANGEROUS.
+  contact:
+    email: info@rootcrak.com
+    url: https://github.com/ro0tcr4k/intel-api
+servers:
+  - url: https://intel.rootcrak.com
+paths:
+  /v1/intel/health:
+    get:
+      summary: Liveness and payment posture
+      operationId: health
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, product, tos, payments, environment, payments_enabled]
+                properties:
+                  status: { type: string, example: ok }
+                  product: { type: string, example: intel-api-v1 }
+                  tos: { type: string, example: intelligence, not warranty }
+                  payments: { type: string }
+                  environment: { type: string, enum: [development, production] }
+                  payments_enabled: { type: boolean }
+  /v1/intel/sdk:
+    get:
+      summary: Official x402 SDK pin
+      operationId: sdk
+      responses:
+        "200":
+          description: Protocol packages and CAIP-2 networks
+  /v1/intel/scans/drainer:
+    post:
+      summary: Paid drainer scan ($0.05 USDC)
+      operationId: createDrainerScan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanRequest"
+      parameters:
+        - $ref: "#/components/parameters/PaymentSignature"
+      responses:
+        "200":
+          description: Payment settled; job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobCreated"
+        "402":
+          description: Payment required or rejected
+  /v1/intel/scans/domain:
+    post:
+      summary: Paid domain + LLM-injection scan ($0.25 USDC)
+      operationId: createDomainScan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanRequest"
+      parameters:
+        - $ref: "#/components/parameters/PaymentSignature"
+      responses:
+        "200":
+          description: Payment settled; job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobCreated"
+        "402":
+          description: Payment required or rejected
+  /v1/intel/jobs/{job_id}:
+    get:
+      summary: Job status
+      operationId: getJob
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/JobToken"
+      responses:
+        "200":
+          description: Status payload
+        "401":
+          description: Token missing
+        "404":
+          description: Unknown job or wrong token
+  /v1/intel/jobs/{job_id}/result:
+    get:
+      summary: Poll scan result
+      operationId: getJobResult
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+        - $ref: "#/components/parameters/JobToken"
+      responses:
+        "200":
+          description: Completed Intel payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntelResult"
+        "202":
+          description: Still queued or running
+          headers:
+            Retry-After:
+              schema: { type: integer }
+        "502":
+          description: Job failed after payment
+components:
+  parameters:
+    PaymentSignature:
+      name: PAYMENT-SIGNATURE
+      in: header
+      required: false
+      schema: { type: string }
+      description: Official x402 payment payload. Omit to receive HTTP 402.
+    JobId:
+      name: job_id
+      in: path
+      required: true
+      schema: { type: string }
+    JobToken:
+      name: X-Job-Token
+      in: header
+      required: true
+      schema: { type: string }
+  schemas:
+    ScanRequest:
+      type: object
+      required: [target]
+      properties:
+        target:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: Public http(s) URL or hostname
+    JobCreated:
+      type: object
+      required: [job_id, access_token, status, poll, result, poll_after_seconds, timeout_seconds]
+      properties:
+        job_id: { type: string }
+        access_token: { type: string }
+        status: { type: string, enum: [queued, running, done, failed] }
+        poll: { type: string }
+        result: { type: string }
+        poll_after_seconds: { type: integer }
+        timeout_seconds: { type: integer }
+    EvidenceItem:
+      type: object
+      required: [source, detail]
+      properties:
+        source: { type: string }
+        detail: { type: string }
+        weight: { type: number }
+        phase: { type: string }
+    IntelResult:
+      type: object
+      required: [risk_score, confidence, flags, evidence, recommended_action, disclaimer, tos]
+      properties:
+        risk_score: { type: integer, minimum: 0, maximum: 100 }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        flags:
+          type: array
+          items: { type: string }
+        evidence:
+          type: array
+          items: { $ref: "#/components/schemas/EvidenceItem" }
+        recommended_action:
+          type: string
+          enum: [monitor, proceed_with_caution, investigate_further, do_not_interact]
+        disclaimer: { type: string }
+        tos: { type: string, enum: ["intelligence, not warranty"] }
+        target: { type: string }
+        scan_type: { type: string, enum: [drainer, domain] }
+        cogs: { type: object, additionalProperties: true }
+      not:
+        anyOf:
+          - required: [verdict]
+          - required: [is_safe]
+          - required: [binary_verdict]
