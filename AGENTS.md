@@ -12,7 +12,7 @@ Follow this file, not marketing pages, when paying or polling.
 | Asset | USDC only (x402). No `$ROOT`. |
 | Rails | Base `eip155:8453`, Solana `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` |
 
-Confirm live state with `GET /v1/intel/health` (`environment=production`, `payments_enabled=true`) and pin the protocol with `GET /v1/intel/sdk`.
+Start at `GET /` (JSON) or `GET /llms.txt`. Confirm live state with `GET /v1/intel/health` (`environment=production`, `payments_enabled=true`) and pin the protocol with `GET /v1/intel/sdk`. Discovery: `GET /.well-known/x402`.
 
 ## When you must call
 
