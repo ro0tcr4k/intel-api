@@ -99,6 +99,7 @@ After a **200** result:
 ## Limits
 
 - Job polls: 120/min class (separate from create). Honor 429 `Retry-After`.
+- If create returns **502** `facilitator_settle_timeout`, retry the **same** `PAYMENT-SIGNATURE`. Do not open a new 402 — the pay may already have settled.
 - Drainer: same remote browser sandbox as the human scanner when `GET /v1/intel/health` shows `drainer_sandbox: true`. Busy or dead sandbox fails the job (**502**) — not a fake `monitor`. Confirm `cogs.sandbox_used`. Honor `timeout_seconds` from the paid 200 (typically 240s with sandbox on).
 - Domain injection: regex/heuristic on HTML already fetched for headers. No second GET, no extra crawl. Novel wording can slip.
 - Targets must be public HTTP(S). Private / link-local hosts are rejected.
