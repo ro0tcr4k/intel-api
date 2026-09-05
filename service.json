@@ -5,8 +5,12 @@
   "description": "Paid x402 pre-flight scans for AI agents: wallet-drainer heuristics and domain + static LLM-injection analysis. Returns risk signals, never SAFE/DANGEROUS.",
   "base_url": "https://intel.rootcrak.com",
   "docs": "https://github.com/ro0tcr4k/intel-api",
+  "root": "https://intel.rootcrak.com/",
+  "llms": "https://intel.rootcrak.com/llms.txt",
+  "well_known": "https://intel.rootcrak.com/.well-known/x402",
   "health": "https://intel.rootcrak.com/v1/intel/health",
   "sdk": "https://intel.rootcrak.com/v1/intel/sdk",
+  "openapi": "https://intel.rootcrak.com/openapi.json",
   "payments": {
     "protocol": "x402",
     "asset": "USDC",
