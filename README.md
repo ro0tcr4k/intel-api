@@ -26,14 +26,14 @@ If your agent can click, sign, or fetch untrusted HTML, it is a target. Scan fir
 
 | Route | What it checks | Price | Typical wait |
 |---|---|---|---|
-| `POST /v1/intel/scans/drainer` | Wallet-drainer / approval-kit heuristics on a URL | **$0.05 USDC** | poll every **5s**, cap **90s** |
-| `POST /v1/intel/scans/domain` | Headers, DNS, exposed files, plus a **static LLM-injection** pass on the fetched HTML | **$0.25 USDC** | poll every **12s**, cap **480s** |
+| `POST /v1/intel/scans/drainer` | Wallet-drainer heuristics plus the same browser sandbox humans use, when `health.drainer_sandbox` is true | **$0.05 USDC** | poll every **5s**, cap **240s** |
+| `POST /v1/intel/scans/domain` | Headers, DNS, exposed files, plus regex/heuristic LLM-injection on already-fetched HTML | **$0.25 USDC** | poll every **12s**, cap **480s** |
 
 Base URL: `https://intel.rootcrak.com`
 
 Unpaid calls return **HTTP 402** with `accepts` (network, asset, amount, `pay_to`, Solana `extra.feePayer`). Pay with an official x402 client, retry the same `POST` with `PAYMENT-SIGNATURE`, then poll.
 
-Paid drainer is **static analysis** (no remote browser sandbox). Domain injection is **regex/heuristic on already-fetched HTML** — no second HTTP fetch, no ML classifier. Novel prose can slip; treat `recommended_action` as advice, not a guarantee.
+Paid drainer uses the same remote browser sandbox as the human scanner when `GET /v1/intel/health` shows `drainer_sandbox: true`. Busy or dead sandbox fails the job — we do not return a fake `monitor`. Confirm `cogs.sandbox_used`. Domain injection is regex/heuristic on HTML already fetched for headers — no second GET, no ML classifier. Novel prose can slip; treat `recommended_action` as advice, not a guarantee.
 
 ---
 
